@@ -9,9 +9,11 @@ private:
 	//Project profit in million tomans
 	float Profit;
 
+	int DeadLine;
+
 public:
 	MissionCity();
-	MissionCity(std::string CityName, bool bAirport, bool bRailOrWharf, bool bRoad, float ProjectTime, float Income);
+	MissionCity(std::string CityName, bool bAirport, bool bRailOrWharf, bool bRoad, float ProjectTime, float Income, int MaxTime);
 
 };
 

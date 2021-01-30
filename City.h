@@ -10,10 +10,10 @@ private:
 
 protected:
 	//Means of travel
-	bool bHasAirport, bHasRailOrWharf, bHasRoad;
+	bool bHasAirport, bHasRailOrWharf, bHasRoad, bIsVisited;
 	//Connected Cities
 
-	std::vector<City> NearbyCities;
+	std::vector<City*> NearbyCities;
 	//Distance of nearby city from this city
 	std::vector<int> DistanceFromThisCity;
 
@@ -22,6 +22,7 @@ public:
 	City(std::string CityName, bool bAirport, bool bRailOrWharf, bool bRoad);
 
 	void AddNearbyCity(City& NearbyCity, const int Distance);
+	bool GetIsVisited() const;
 	std::string GetName() const;
 
 };
