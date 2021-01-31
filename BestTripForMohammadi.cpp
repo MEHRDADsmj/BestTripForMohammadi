@@ -217,7 +217,62 @@ int main()
 	Vladivostok.AddNearbyCity(Tokyo, 1200);
 	Vladivostok.AddNearbyCity(Anchorage, 2750);
 
+	std::vector<City*> AllCities;
+	AllCities.push_back(&LosAngeles); //0
+	AllCities.push_back(&Montreal); //1
+	AllCities.push_back(&NewYork); //2
+	AllCities.push_back(&SanJuan); //3
+	AllCities.push_back(&Caracus); //4
+	AllCities.push_back(&Santiago); //5
+	AllCities.push_back(&Rio); //6
+	AllCities.push_back(&Casablanca); //7
+	AllCities.push_back(&Accra); //8
+	AllCities.push_back(&Nairobi); //9
+	AllCities.push_back(&Khartoum); //10
+	AllCities.push_back(&Cairo); //11
+	AllCities.push_back(&London); //12
+	AllCities.push_back(&Istanbul); //13
+	AllCities.push_back(&Moskva); //14
+	AllCities.push_back(&Dubai); //15
+	AllCities.push_back(&Khuree); //16
+	AllCities.push_back(&Katmandu); //17
+	AllCities.push_back(&Madras); //18
+	AllCities.push_back(&HongKong); //19
+	AllCities.push_back(&Singapore); //20
+	AllCities.push_back(&Batavia); //21
+	AllCities.push_back(&Dakar); //22
+	AllCities.push_back(&Sydney); //23
+	AllCities.push_back(&Anchorage); //24
+	AllCities.push_back(&Tokyo); //25
+	AllCities.push_back(&Reykjavik); //26
+	AllCities.push_back(&CapeTown); //27
+	AllCities.push_back(&Tehran); //28
+	AllCities.push_back(&BuenosAires); //29
+	AllCities.push_back(&Panama); //30
+	AllCities.push_back(&Vladivostok); //31
+
 #pragma endregion Initialization
 
+	//Init distance graph
+	int Graph[32][32] = { 0 };
 
+	for (unsigned int Row = 0; Row < 32; Row++)
+	{
+		for (unsigned int Col = 0; Col < AllCities[Row]->GetNearbyCities().size(); Col++)
+		{
+			Graph[Row][AllCities[Row]->GetNeabyCity(Col)->GetIndex()] = AllCities[Row]->GetDistanceFrom(Col);
+		}
+	}
+
+	for (int i = 0; i < 32; i++)
+	{
+		for (int j = 0; j < 32; j++)
+		{
+			std::cout << Graph[i][j] << "  ";
+		}
+		std::cout << std::endl;
+	}
+
+	system("pause");
+	return 0;
 }
