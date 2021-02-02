@@ -4,6 +4,14 @@
 #include <iostream>
 #include "City.h"
 #include "MissionCity.h"
+#include <array>
+#define CityCount 32
+#define SoMuchKilometers 6000000
+
+void Dijkstra(std::array<City*, CityCount>& ParentCities, std::vector<City*> AllCities, int StartCityIndex, std::array<std::array<int, CityCount>, CityCount> Graph);
+int GetMin(std::array<int, CityCount> Distance, std::array<bool, CityCount> IsProcessed, int& MinDistance);
+City* GetParent(City& CityToProcess, std::array<City*, CityCount>& Parents);
+void Print(std::array<City*, CityCount>& Parents, std::vector<City*> AllCities);
 
 int main()
 {
@@ -213,7 +221,7 @@ int main()
 
 	Vladivostok.AddNearbyCity(Moskva, 6400);
 	Vladivostok.AddNearbyCity(Khuree, 1400);
-	Vladivostok.AddNearbyCity(Katmandu, 2400);
+	Vladivostok.AddNearbyCity(HongKong, 2400);
 	Vladivostok.AddNearbyCity(Tokyo, 1200);
 	Vladivostok.AddNearbyCity(Anchorage, 2750);
 
@@ -254,25 +262,92 @@ int main()
 #pragma endregion Initialization
 
 	//Init distance graph
-	int Graph[32][32] = { 0 };
+	//int Graph[CityCount][CityCount] = { 0 };
+	std::array<std::array<int, CityCount>, CityCount> Graph = { 0 };
 
-	for (unsigned int Row = 0; Row < 32; Row++)
+	for (int Row = 0; Row < CityCount; Row++)
 	{
-		for (unsigned int Col = 0; Col < AllCities[Row]->GetNearbyCities().size(); Col++)
+		for (int Col = 0; Col < CityCount; Col++)
 		{
-			Graph[Row][AllCities[Row]->GetNeabyCity(Col)->GetIndex()] = AllCities[Row]->GetDistanceFrom(Col);
+			Graph[Row][Col] = AllCities[Row]->GetDistanceFrom(Col, AllCities);
 		}
 	}
 
-	for (int i = 0; i < 32; i++)
-	{
-		for (int j = 0; j < 32; j++)
-		{
-			std::cout << Graph[i][j] << "  ";
-		}
-		std::cout << std::endl;
-	}
+	std::array<City*, CityCount> ParentCities;
+	ParentCities.fill(nullptr);
+
+	Dijkstra(ParentCities, AllCities, Tehran.GetIndex(), Graph);
+
+	Print(ParentCities, AllCities);
 
 	system("pause");
 	return 0;
+}
+
+void Dijkstra(std::array<City*, CityCount>& ParentCities, std::vector<City*> AllCities, int StartCityIndex, std::array<std::array<int, CityCount>, CityCount> Graph)
+{
+	std::array<int, CityCount> Distance;
+	Distance.fill(SoMuchKilometers);
+	std::array<bool, CityCount> IsProcessed;
+	IsProcessed.fill(false);
+
+	int NextNodeIndex, CountsAlgoDone, MinDistance;
+
+	for (int Iterator = 0; Iterator < CityCount; Iterator++)
+	{
+		Distance[Iterator] = Graph[StartCityIndex][Iterator];
+	}
+	Distance[StartCityIndex] = 0;
+	IsProcessed[StartCityIndex] = true;
+	CountsAlgoDone = 1;
+	while (CountsAlgoDone < CityCount - 1)
+	{
+		NextNodeIndex = GetMin(Distance, IsProcessed, MinDistance);
+		IsProcessed[NextNodeIndex] = true;
+		for (int Iterator = 0; Iterator < CityCount; Iterator++)
+		{
+			if (!IsProcessed[Iterator])
+			{
+				if (MinDistance + Graph[NextNodeIndex][Iterator] < Distance[Iterator])
+				{
+					Distance[Iterator] = MinDistance + Graph[NextNodeIndex][Iterator];
+					ParentCities[Iterator] = AllCities[NextNodeIndex];
+				}
+			}
+		}
+		CountsAlgoDone++;
+	}
+}
+
+int GetMin(std::array<int, CityCount> Distance, std::array<bool, CityCount> IsProcessed, int& MinDistance)
+{
+	MinDistance = SoMuchKilometers;
+	int MinIndex = -1;
+	for (int Iterator = 0; Iterator < CityCount; Iterator++)
+	{
+		if (!IsProcessed[Iterator] && Distance[Iterator] < MinDistance)
+		{
+			MinDistance = Distance[Iterator];
+			MinIndex = Iterator;
+		}
+	}
+	return MinIndex;
+}
+
+City* GetParent(City& CityToProcess, std::array<City*, CityCount>& Parents)
+{
+	return Parents[CityToProcess.GetIndex()];
+}
+
+void Print(std::array<City*, CityCount>& Parents, std::vector<City*> AllCities)
+{
+	for (int i = 0; i < CityCount; i++)
+	{
+		std::cout << AllCities[i]->GetName() << " : ";
+		for (City* Parent = GetParent(*AllCities[i], Parents); Parent != nullptr; Parent = GetParent(*Parent, Parents))
+		{
+			std::cout << Parent->GetName() << " <- ";
+		}
+		std::cout << std::endl;
+	}
 }

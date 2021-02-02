@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#define SoMuchKilometers 60000
 
 class City
 {
@@ -25,13 +26,14 @@ public:
 	City(std::string CityName, bool bAirport, bool bRailOrWharf, bool bRoad);
 
 	void AddNearbyCity(City& NearbyCity, const int Distance);
-	City* GetNeabyCity(unsigned int Index);
+	City* GetNearbyCity(unsigned int Index);
 	std::vector<City*> GetNearbyCities() const;
-	bool HasInNearbyCities(City& CityToCheck);
+	int HasInNearbyCities(City& CityToCheck);
 	int GetIndex() const;
 	bool GetIsVisited() const;
 	std::string GetName() const;
-	int GetDistanceFrom(unsigned int DestinationCityIndex);
+	int GetDistanceFrom(unsigned int DestinationCityIndex, std::vector<City*> AllCities = {});
+	int GetDistanceInNearbies(unsigned int DestinationCityIndex, std::vector<City*> AllCities = {});
 
 };
 

@@ -17,7 +17,7 @@ void City::AddNearbyCity(City& NearbyCity, const int Distance)
 	DistanceFromThisCity.push_back(Distance);
 }
 
-City* City::GetNeabyCity(unsigned int Index)
+City* City::GetNearbyCity(unsigned int Index)
 {
 	return NearbyCities[Index];
 }
@@ -27,17 +27,17 @@ std::vector<City*> City::GetNearbyCities() const
 	return NearbyCities;
 }
 
-bool City::HasInNearbyCities(City& CityToCheck)
+int City::HasInNearbyCities(City& CityToCheck)
 {
 	for (unsigned int Num = 0; Num < NearbyCities.size(); Num++)
 	{
 		if (&CityToCheck == NearbyCities[Num])
 		{
-			return true;
+			return Num;
 		}
 	}
 
-	return false;
+	return -1;
 }
 
 int City::GetIndex() const
@@ -55,15 +55,22 @@ std::string City::GetName() const
 	return Name;
 }
 
-int City::GetDistanceFrom(unsigned int DestinationCityIndex)
+int City::GetDistanceFrom(unsigned int DestinationCityIndex, std::vector<City*> AllCities)
 {
 	if (DestinationCityIndex == ThisCityIndex)
 	{
-		return 0;
+		return SoMuchKilometers;
 	}
-	if (DestinationCityIndex >= NearbyCities.size())
+	if (HasInNearbyCities(*AllCities[DestinationCityIndex]) == -1)
 	{
-		return 0;
+		return SoMuchKilometers;
 	}
-	return DistanceFromThisCity[DestinationCityIndex];
+	return DistanceFromThisCity[HasInNearbyCities(*AllCities[DestinationCityIndex])];
+}
+
+int City::GetDistanceInNearbies(unsigned int DestinationCityIndex, std::vector<City*> AllCities)
+{
+	unsigned int Iterator = 0;
+	for (; Iterator < DestinationCityIndex; Iterator++);
+	return GetDistanceFrom(NearbyCities[Iterator]->GetIndex(), AllCities);
 }
