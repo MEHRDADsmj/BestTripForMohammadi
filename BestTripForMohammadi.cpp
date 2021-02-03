@@ -320,6 +320,7 @@ int main()
 	
 	int CurrentCityIndex = Tehran.GetIndex();
 
+	//The workflow
 	for (; CurrentCityIndex != -1;)
 	{
 		Dijkstra(Distance, ParentCities, AllCities, CurrentCityIndex, Graph);
