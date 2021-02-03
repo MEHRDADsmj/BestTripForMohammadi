@@ -15,5 +15,9 @@ public:
 	MissionCity();
 	MissionCity(std::string CityName, bool bAirport, bool bRailOrWharf, bool bRoad, float ProjectTime, float Income, int MaxTime);
 
+	float GetProfit() const;
+	float GetDuration() const;
+	int GetDeadline() const;
+
 };
 

@@ -34,6 +34,7 @@ public:
 	std::string GetName() const;
 	int GetDistanceFrom(unsigned int DestinationCityIndex, std::vector<City*> AllCities = {});
 	int GetDistanceInNearbies(unsigned int DestinationCityIndex, std::vector<City*> AllCities = {});
+	void SetIsVisited(bool IsVisited);
 
 };
 

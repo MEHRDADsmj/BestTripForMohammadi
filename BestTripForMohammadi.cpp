@@ -1,17 +1,38 @@
-// BestTripForMohammadi.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include <iostream>
 #include "City.h"
 #include "MissionCity.h"
 #include <array>
 #define CityCount 32
-#define SoMuchKilometers 6000000
 
-void Dijkstra(std::array<City*, CityCount>& ParentCities, std::vector<City*> AllCities, int StartCityIndex, std::array<std::array<int, CityCount>, CityCount> Graph);
-int GetMin(std::array<int, CityCount> Distance, std::array<bool, CityCount> IsProcessed, int& MinDistance);
+#pragma region Declarations
+
+float TimeSpent = 0.0f;
+
+float CurrentProfit = 0.0f;
+
+enum MeanOfTravel {
+	Car,
+	TrainOrShip,
+	Airplane
+};
+
+void Dijkstra(std::array<int, CityCount>& Distance, std::array<City*, CityCount>& ParentCities, std::vector<City*> AllCities, int StartCityIndex, std::array<std::array<int, CityCount>, CityCount> Graph);
+
+int GetMin(std::array<int, CityCount> Distance, int& MinDistance, std::array<bool, CityCount> IsProcessed = { false });
+
 City* GetParent(City& CityToProcess, std::array<City*, CityCount>& Parents);
-void Print(std::array<City*, CityCount>& Parents, std::vector<City*> AllCities);
+
+void PrintDijkstra(std::array<City*, CityCount>& Parents, std::vector<City*> AllCities);
+
+void ApplyMultipliers(std::array<std::array<int, CityCount>, CityCount> Graph, std::array<std::array<MeanOfTravel, CityCount>, CityCount>& TripVehicle);
+
+int GetNextCity(std::array<int, CityCount> Distance, std::vector<City*> AllCities, std::vector<MissionCity*> MissionCities);
+
+void DoMission(MissionCity& DoneCity);
+
+MissionCity* GetMissionCityByIndex(int Index, std::vector<MissionCity*> MissionCities);
+
+#pragma endregion Declarations
 
 int main()
 {
@@ -259,10 +280,24 @@ int main()
 	AllCities.push_back(&Panama); //30
 	AllCities.push_back(&Vladivostok); //31
 
+	std::vector<MissionCity*> MissionCities;
+	MissionCities.push_back(&Dakar); //0
+	MissionCities.push_back(&Sydney); //1
+	MissionCities.push_back(&Anchorage); //2
+	MissionCities.push_back(&Tokyo); //3
+	MissionCities.push_back(&Reykjavik); //4
+	MissionCities.push_back(&CapeTown); //5
+	MissionCities.push_back(&Tehran); //6
+	MissionCities.push_back(&BuenosAires); //7
+	MissionCities.push_back(&Panama); //8
+	MissionCities.push_back(&Vladivostok); //9
+
+
 #pragma endregion Initialization
 
+#pragma region Arrays Initialization
+
 	//Init distance graph
-	//int Graph[CityCount][CityCount] = { 0 };
 	std::array<std::array<int, CityCount>, CityCount> Graph = { 0 };
 
 	for (int Row = 0; Row < CityCount; Row++)
@@ -273,21 +308,37 @@ int main()
 		}
 	}
 
+	std::array<std::array<MeanOfTravel, CityCount>, CityCount> TripVehicle = { MeanOfTravel::Car };
+
+	std::array<int, CityCount> Distance;
+	Distance.fill(SoMuchKilometers);
+
 	std::array<City*, CityCount> ParentCities;
 	ParentCities.fill(nullptr);
 
-	Dijkstra(ParentCities, AllCities, Tehran.GetIndex(), Graph);
+#pragma endregion Arrays Initialization
+	
+	int CurrentCityIndex = Tehran.GetIndex();
 
-	Print(ParentCities, AllCities);
+	for (; CurrentCityIndex != -1;)
+	{
+		Dijkstra(Distance, ParentCities, AllCities, CurrentCityIndex, Graph);
+		MissionCity* Temp = GetMissionCityByIndex(CurrentCityIndex, MissionCities);
+		DoMission(*Temp);
+		std::cout << CurrentCityIndex << std::endl;
+		CurrentCityIndex = GetNextCity(Distance, AllCities, MissionCities);
+	}
 
 	system("pause");
 	return 0;
 }
 
-void Dijkstra(std::array<City*, CityCount>& ParentCities, std::vector<City*> AllCities, int StartCityIndex, std::array<std::array<int, CityCount>, CityCount> Graph)
+#pragma region Implementations
+
+void Dijkstra(std::array<int, CityCount>& Distance, std::array<City*, CityCount>& ParentCities, std::vector<City*> AllCities, int StartCityIndex, std::array<std::array<int, CityCount>, CityCount> Graph)
 {
-	std::array<int, CityCount> Distance;
 	Distance.fill(SoMuchKilometers);
+	ParentCities.fill(nullptr);
 	std::array<bool, CityCount> IsProcessed;
 	IsProcessed.fill(false);
 
@@ -302,7 +353,7 @@ void Dijkstra(std::array<City*, CityCount>& ParentCities, std::vector<City*> All
 	CountsAlgoDone = 1;
 	while (CountsAlgoDone < CityCount - 1)
 	{
-		NextNodeIndex = GetMin(Distance, IsProcessed, MinDistance);
+		NextNodeIndex = GetMin(Distance, MinDistance, IsProcessed);
 		IsProcessed[NextNodeIndex] = true;
 		for (int Iterator = 0; Iterator < CityCount; Iterator++)
 		{
@@ -319,7 +370,7 @@ void Dijkstra(std::array<City*, CityCount>& ParentCities, std::vector<City*> All
 	}
 }
 
-int GetMin(std::array<int, CityCount> Distance, std::array<bool, CityCount> IsProcessed, int& MinDistance)
+int GetMin(std::array<int, CityCount> Distance, int& MinDistance, std::array<bool, CityCount> IsProcessed)
 {
 	MinDistance = SoMuchKilometers;
 	int MinIndex = -1;
@@ -339,7 +390,7 @@ City* GetParent(City& CityToProcess, std::array<City*, CityCount>& Parents)
 	return Parents[CityToProcess.GetIndex()];
 }
 
-void Print(std::array<City*, CityCount>& Parents, std::vector<City*> AllCities)
+void PrintDijkstra(std::array<City*, CityCount>& Parents, std::vector<City*> AllCities)
 {
 	for (int i = 0; i < CityCount; i++)
 	{
@@ -351,3 +402,51 @@ void Print(std::array<City*, CityCount>& Parents, std::vector<City*> AllCities)
 		std::cout << std::endl;
 	}
 }
+
+void ApplyMultipliers(std::array<std::array<int, CityCount>, CityCount>& Graph, std::array<std::array<MeanOfTravel, CityCount>, CityCount>& TripVehicle)
+{
+
+}
+
+int GetNextCity(std::array<int, CityCount> Distance, std::vector<City*> AllCities, std::vector<MissionCity*> MissionCities)
+{
+	int MinDistance = SoMuchKilometers;
+	int MinIndex = -1;
+	for (auto CurrentCity : MissionCities)
+	{
+		if (!CurrentCity->GetIsVisited() && Distance[CurrentCity->GetIndex()] < MinDistance)
+		{
+			MinDistance = Distance[CurrentCity->GetIndex()];
+			MinIndex = CurrentCity->GetIndex();
+		}
+	}
+	return MinIndex;
+}
+
+void DoMission(MissionCity& DoneCity)
+{
+	if (TimeSpent <= DoneCity.GetDeadline())
+	{
+		CurrentProfit += DoneCity.GetProfit();
+	}
+	else
+	{
+		CurrentProfit += (DoneCity.GetProfit() * ((TimeSpent - DoneCity.GetDeadline() * 0.4f)));
+	}
+	TimeSpent += DoneCity.GetDuration();
+	DoneCity.SetIsVisited(true);
+}
+
+MissionCity* GetMissionCityByIndex(int Index, std::vector<MissionCity*> MissionCities)
+{
+	for (auto CurrentCity : MissionCities)
+	{
+		if (Index == CurrentCity->GetIndex())
+		{
+			return CurrentCity;
+		}
+	}
+	return nullptr;
+}
+
+#pragma endregion Implementations

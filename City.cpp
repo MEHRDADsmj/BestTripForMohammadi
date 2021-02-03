@@ -74,3 +74,8 @@ int City::GetDistanceInNearbies(unsigned int DestinationCityIndex, std::vector<C
 	for (; Iterator < DestinationCityIndex; Iterator++);
 	return GetDistanceFrom(NearbyCities[Iterator]->GetIndex(), AllCities);
 }
+
+void City::SetIsVisited(bool IsVisited)
+{
+	bIsVisited = IsVisited;
+}
