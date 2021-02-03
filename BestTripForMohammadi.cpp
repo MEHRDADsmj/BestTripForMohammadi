@@ -22,7 +22,7 @@ int GetMin(std::array<int, CityCount> Distance, int& MinDistance, std::array<boo
 
 City* GetParent(City& CityToProcess, std::array<City*, CityCount>& Parents);
 
-void PrintDijkstra(std::array<City*, CityCount>& Parents, std::vector<City*> AllCities);
+void PrintDijkstra(std::array<City*, CityCount>& Parents, std::vector<City*> AllCities, int DestinationIndex);
 
 void ApplyMultipliers(std::array<std::array<int, CityCount>, CityCount> Graph, std::array<std::array<MeanOfTravel, CityCount>, CityCount>& TripVehicle);
 
@@ -317,8 +317,10 @@ int main()
 	ParentCities.fill(nullptr);
 
 #pragma endregion Arrays Initialization
-	
+
 	int CurrentCityIndex = Tehran.GetIndex();
+
+	std::cout << Tehran.GetName() << std::endl;
 
 	//The workflow
 	for (; CurrentCityIndex != -1;)
@@ -326,9 +328,13 @@ int main()
 		Dijkstra(Distance, ParentCities, AllCities, CurrentCityIndex, Graph);
 		MissionCity* Temp = GetMissionCityByIndex(CurrentCityIndex, MissionCities);
 		DoMission(*Temp);
-		std::cout << CurrentCityIndex << std::endl;
 		CurrentCityIndex = GetNextCity(Distance, AllCities, MissionCities);
+		if (CurrentCityIndex != -1)
+		{
+			PrintDijkstra(ParentCities, AllCities, CurrentCityIndex);
+		}
 	}
+	std::cout << CurrentProfit << "    " << TimeSpent << std::endl;
 
 	system("pause");
 	return 0;
@@ -391,17 +397,14 @@ City* GetParent(City& CityToProcess, std::array<City*, CityCount>& Parents)
 	return Parents[CityToProcess.GetIndex()];
 }
 
-void PrintDijkstra(std::array<City*, CityCount>& Parents, std::vector<City*> AllCities)
+void PrintDijkstra(std::array<City*, CityCount>& Parents, std::vector<City*> AllCities, int DestinationIndex)
 {
-	for (int i = 0; i < CityCount; i++)
+	std::cout << AllCities[DestinationIndex]->GetName() << " <- ";
+	for (City* Parent = GetParent(*AllCities[DestinationIndex], Parents); Parent != nullptr; Parent = GetParent(*Parent, Parents))
 	{
-		std::cout << AllCities[i]->GetName() << " : ";
-		for (City* Parent = GetParent(*AllCities[i], Parents); Parent != nullptr; Parent = GetParent(*Parent, Parents))
-		{
-			std::cout << Parent->GetName() << " <- ";
-		}
-		std::cout << std::endl;
+		std::cout << Parent->GetName() << " <- ";
 	}
+	std::cout << std::endl;
 }
 
 void ApplyMultipliers(std::array<std::array<int, CityCount>, CityCount>& Graph, std::array<std::array<MeanOfTravel, CityCount>, CityCount>& TripVehicle)
