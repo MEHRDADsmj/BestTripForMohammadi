@@ -9,7 +9,9 @@ private:
 	//Project profit in million tomans
 	float Profit;
 
-	int DeadLine;
+	float DeadLine;
+
+	float Priority;
 
 public:
 	MissionCity();
@@ -17,7 +19,8 @@ public:
 
 	float GetProfit() const;
 	float GetDuration() const;
-	int GetDeadline() const;
+	float GetDeadline() const;
+	float GetPriority() const;
 
 };
 

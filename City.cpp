@@ -55,7 +55,7 @@ std::string City::GetName() const
 	return Name;
 }
 
-int City::GetDistanceFrom(unsigned int DestinationCityIndex, std::vector<City*> AllCities)
+float City::GetDistanceFrom(unsigned int DestinationCityIndex, std::vector<City*> AllCities)
 {
 	if (DestinationCityIndex == ThisCityIndex)
 	{
@@ -68,7 +68,7 @@ int City::GetDistanceFrom(unsigned int DestinationCityIndex, std::vector<City*> 
 	return DistanceFromThisCity[HasInNearbyCities(*AllCities[DestinationCityIndex])];
 }
 
-int City::GetDistanceInNearbies(unsigned int DestinationCityIndex, std::vector<City*> AllCities)
+float City::GetDistanceInNearbies(unsigned int DestinationCityIndex, std::vector<City*> AllCities)
 {
 	unsigned int Iterator = 0;
 	for (; Iterator < DestinationCityIndex; Iterator++);

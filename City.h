@@ -32,8 +32,8 @@ public:
 	int GetIndex() const;
 	bool GetIsVisited() const;
 	std::string GetName() const;
-	int GetDistanceFrom(unsigned int DestinationCityIndex, std::vector<City*> AllCities = {});
-	int GetDistanceInNearbies(unsigned int DestinationCityIndex, std::vector<City*> AllCities = {});
+	float GetDistanceFrom(unsigned int DestinationCityIndex, std::vector<City*> AllCities = {});
+	float GetDistanceInNearbies(unsigned int DestinationCityIndex, std::vector<City*> AllCities = {});
 	void SetIsVisited(bool IsVisited);
 
 };
