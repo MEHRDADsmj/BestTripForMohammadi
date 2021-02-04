@@ -2,7 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#define SoMuchKilometers 60000
+#define SoBigNumber 60000000000.0f
 
 class City
 {
@@ -11,11 +11,11 @@ private:
 
 protected:
 	//Means of travel
-	bool bHasAirport, bHasRailOrWharf, bHasRoad, bIsVisited;
+	bool bIsVisited;
 	//Connected Cities
 	std::vector<City*> NearbyCities;
 	//Distance of nearby city from this city
-	std::vector<int> DistanceFromThisCity;
+	std::vector<float> DistanceFromThisCity;
 
 	int ThisCityIndex;
 
@@ -25,7 +25,7 @@ public:
 	City();
 	City(std::string CityName, bool bAirport, bool bRailOrWharf, bool bRoad);
 
-	void AddNearbyCity(City& NearbyCity, const int Distance);
+	void AddNearbyCity(City& NearbyCity, const float Distance);
 	City* GetNearbyCity(unsigned int Index);
 	std::vector<City*> GetNearbyCities() const;
 	int HasInNearbyCities(City& CityToCheck);
@@ -35,6 +35,8 @@ public:
 	float GetDistanceFrom(unsigned int DestinationCityIndex, std::vector<City*> AllCities = {});
 	float GetDistanceInNearbies(unsigned int DestinationCityIndex, std::vector<City*> AllCities = {});
 	void SetIsVisited(bool IsVisited);
+
+	bool bHasAirport, bHasRailOrWharf, bHasRoad;
 
 };
 

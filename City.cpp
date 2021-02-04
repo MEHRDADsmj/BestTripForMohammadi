@@ -11,7 +11,7 @@ bHasRoad(bRoad), bIsVisited(false), ThisCityIndex(CityIndex)
 	CityIndex++;
 }
 
-void City::AddNearbyCity(City& NearbyCity, const int Distance)
+void City::AddNearbyCity(City& NearbyCity, const float Distance)
 {
 	NearbyCities.push_back(&NearbyCity);
 	DistanceFromThisCity.push_back(Distance);
@@ -59,11 +59,11 @@ float City::GetDistanceFrom(unsigned int DestinationCityIndex, std::vector<City*
 {
 	if (DestinationCityIndex == ThisCityIndex)
 	{
-		return SoMuchKilometers;
+		return SoBigNumber;
 	}
 	if (HasInNearbyCities(*AllCities[DestinationCityIndex]) == -1)
 	{
-		return SoMuchKilometers;
+		return SoBigNumber;
 	}
 	return DistanceFromThisCity[HasInNearbyCities(*AllCities[DestinationCityIndex])];
 }

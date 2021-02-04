@@ -15,7 +15,7 @@ private:
 
 public:
 	MissionCity();
-	MissionCity(std::string CityName, bool bAirport, bool bRailOrWharf, bool bRoad, float ProjectTime, float Income, int MaxTime);
+	MissionCity(std::string CityName, bool bAirport, bool bRailOrWharf, bool bRoad, float ProjectTime, float Income, float MaxTime);
 
 	float GetProfit() const;
 	float GetDuration() const;

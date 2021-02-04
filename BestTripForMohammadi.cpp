@@ -10,10 +10,19 @@ float TimeSpent = 0.0f;
 
 float CurrentProfit = 0.0f;
 
-enum MeanOfTravel {
+const float CarTime = 3000.0f;
+const float CarCost = 1000.0f;
+
+const float RailOrWharfTime = 2500.0f;
+const float RailOrWharfCost = 500.0f;
+
+const float AirCost = 3'000'000.0f;
+
+enum class MeanOfTravel {
 	Car,
 	TrainOrShip,
-	Airplane
+	Airplane,
+	None
 };
 
 void Dijkstra(std::array<float, CityCount>& Distance, std::array<City*, CityCount>& ParentCities, std::vector<City*> AllCities, int StartCityIndex, std::array<std::array<float, CityCount>, CityCount> Graph);
@@ -22,15 +31,23 @@ int GetMinDijkstra(std::array<float, CityCount> Distance, float& MinDistance, st
 
 City* GetParent(City& CityToProcess, std::array<City*, CityCount>& Parents);
 
-void PrintDijkstra(std::array<City*, CityCount>& Parents, std::vector<City*> AllCities, int DestinationIndex);
+void PrintDijkstra(std::array<City*, CityCount>& Parents, std::vector<City*> AllCities, int DestinationIndex,
+	std::array<std::array<MeanOfTravel, CityCount>, CityCount>& TripVehicle, std::array<std::array<float, CityCount>, CityCount>& Cost,
+	std::array<std::array<float, CityCount>, CityCount>& Time, int StartIndex = 28);
 
-void ApplyMultipliers(std::array<std::array<float, CityCount>, CityCount> Graph, std::array<std::array<MeanOfTravel, CityCount>, CityCount>& TripVehicle);
+void ApplyMultipliers(std::array<std::array<float, CityCount>, CityCount>& Graph, std::array<std::array<MeanOfTravel, CityCount>, CityCount>& TripVehicle,
+	std::vector<City*> AllCities, std::array<std::array<float, CityCount>, CityCount>& Cost, std::array<std::array<float, CityCount>, CityCount>& Time);
 
 int GetNextCity(std::array<float, CityCount> Distance, std::vector<City*> AllCities, std::vector<MissionCity*> MissionCities);
 
 void DoMission(MissionCity& DoneCity);
 
 MissionCity* GetMissionCityByIndex(int Index, std::vector<MissionCity*> MissionCities);
+
+void SetPathBestDecision(std::array<std::array<float, CityCount>, CityCount> Graph, std::array<std::array<MeanOfTravel, CityCount>, CityCount>& TripVehicle, std::vector<City*> AllCities);
+
+float GetVehicleTime(MeanOfTravel Vehicle);
+float GetVehicleCost(MeanOfTravel Vehicle);
 
 #pragma endregion Declarations
 
@@ -307,20 +324,27 @@ int main()
 		}
 	}
 
-	std::array<std::array<MeanOfTravel, CityCount>, CityCount> TripVehicle = { MeanOfTravel::Car };
+	std::array<std::array<MeanOfTravel, CityCount>, CityCount> TripVehicle = { MeanOfTravel::None };
 
 	std::array<float, CityCount> Distance;
-	Distance.fill(SoMuchKilometers);
+	Distance.fill(SoBigNumber);
 
 	std::array<City*, CityCount> ParentCities;
 	ParentCities.fill(nullptr);
+
+	std::array<std::array<float, CityCount>, CityCount> Cost = { SoBigNumber };
+
+	std::array<std::array<float, CityCount>, CityCount> Time = { SoBigNumber };
+
+	SetPathBestDecision(Graph, TripVehicle, AllCities);
+
+	ApplyMultipliers(Graph, TripVehicle, AllCities, Cost, Time);
 
 #pragma endregion Arrays Initialization
 
 	int CurrentCityIndex = Tehran.GetIndex();
 
 	std::cout << Tehran.GetName() << std::endl;
-	/*DoMission(Tehran);*/
 
 	//The workflow
 	for (; CurrentCityIndex != -1;)
@@ -328,13 +352,14 @@ int main()
 		Dijkstra(Distance, ParentCities, AllCities, CurrentCityIndex, Graph);
 		MissionCity* Temp = GetMissionCityByIndex(CurrentCityIndex, MissionCities);
 		DoMission(*Temp);
+		int PreviousCityIndex = CurrentCityIndex;
 		CurrentCityIndex = GetNextCity(Distance, AllCities, MissionCities);
 		if (CurrentCityIndex != -1)
 		{
-			PrintDijkstra(ParentCities, AllCities, CurrentCityIndex);
+			PrintDijkstra(ParentCities, AllCities, CurrentCityIndex, TripVehicle, Cost, Time, PreviousCityIndex);
 		}
 	}
-	std::cout << CurrentProfit << "    " << TimeSpent << std::endl;
+	std::cout << "Total Profit: " << CurrentProfit << "    " << "Total Time: " << TimeSpent << std::endl;
 
 	system("pause");
 	return 0;
@@ -344,7 +369,7 @@ int main()
 
 void Dijkstra(std::array<float, CityCount>& Distance, std::array<City*, CityCount>& ParentCities, std::vector<City*> AllCities, int StartCityIndex, std::array<std::array<float, CityCount>, CityCount> Graph)
 {
-	Distance.fill(SoMuchKilometers);
+	Distance.fill(SoBigNumber);
 	ParentCities.fill(nullptr);
 	std::array<bool, CityCount> IsProcessed;
 	IsProcessed.fill(false);
@@ -380,7 +405,7 @@ void Dijkstra(std::array<float, CityCount>& Distance, std::array<City*, CityCoun
 
 int GetMinDijkstra(std::array<float, CityCount> Distance, float& MinDistance, std::array<bool, CityCount> IsProcessed)
 {
-	MinDistance = SoMuchKilometers;
+	MinDistance = SoBigNumber;
 	int MinIndex = -1;
 	for (int Iterator = 0; Iterator < CityCount; Iterator++)
 	{
@@ -398,29 +423,79 @@ City* GetParent(City& CityToProcess, std::array<City*, CityCount>& Parents)
 	return Parents[CityToProcess.GetIndex()];
 }
 
-void PrintDijkstra(std::array<City*, CityCount>& Parents, std::vector<City*> AllCities, int DestinationIndex)
+void PrintDijkstra(std::array<City*, CityCount>& Parents, std::vector<City*> AllCities, int DestinationIndex,
+	std::array<std::array<MeanOfTravel, CityCount>, CityCount>& TripVehicle, std::array<std::array<float, CityCount>, CityCount>& Cost,
+	std::array<std::array<float, CityCount>, CityCount>& Time, int StartIndex)
 {
-	std::cout << AllCities[DestinationIndex]->GetName() << " <- ";
-	for (City* Parent = GetParent(*AllCities[DestinationIndex], Parents); Parent != nullptr; Parent = GetParent(*Parent, Parents))
+	City* CurrentCity = AllCities[DestinationIndex];
+	for (City* Parent = GetParent(*CurrentCity, Parents); ; )
 	{
-		std::cout << Parent->GetName() << " <- ";
+		int StartCityIndex;
+		DestinationIndex = CurrentCity->GetIndex();
+		if (Parent == nullptr)
+		{
+			StartCityIndex = StartIndex;
+		}
+		else
+		{
+			StartCityIndex = Parent->GetIndex();
+		}
+		std::string Vehicle;
+		if (TripVehicle[StartCityIndex][DestinationIndex] == MeanOfTravel::Car)
+		{
+			Vehicle = "Car";
+		}
+		else if (TripVehicle[StartCityIndex][DestinationIndex] == MeanOfTravel::TrainOrShip)
+		{
+			Vehicle = "Train or Ship";
+		}
+		else
+		{
+			Vehicle = "Airplane";
+		}
+		TimeSpent += Time[StartCityIndex][DestinationIndex];
+		CurrentProfit -= Cost[StartCityIndex][DestinationIndex];
+		std::cout << CurrentCity->GetName() << " (" << Vehicle << ")" << " <- ";
+		CurrentCity = Parent;
+		if (CurrentCity == nullptr)
+		{
+			break;
+		}
+		Parent = GetParent(*CurrentCity, Parents);
 	}
 	std::cout << std::endl;
 }
 
-void ApplyMultipliers(std::array<std::array<float, CityCount>, CityCount>& Graph, std::array<std::array<MeanOfTravel, CityCount>, CityCount>& TripVehicle)
+void ApplyMultipliers(std::array<std::array<float, CityCount>, CityCount>& Graph, std::array<std::array<MeanOfTravel, CityCount>, CityCount>& TripVehicle,
+	std::vector<City*> AllCities, std::array<std::array<float, CityCount>, CityCount>& Cost, std::array<std::array<float, CityCount>, CityCount>& Time)
 {
-
+	for (int Row = 0; Row < CityCount; Row++)
+	{
+		for (int Col = 0; Col < CityCount; Col++)
+		{
+			if (TripVehicle[Row][Col] == MeanOfTravel::Airplane)
+			{
+				Cost[Row][Col] = GetVehicleCost(MeanOfTravel::Airplane);
+				Time[Row][Col] = GetVehicleTime(MeanOfTravel::Airplane);
+			}
+			else
+			{
+				Cost[Row][Col] = Graph[Row][Col] * GetVehicleCost(TripVehicle[Row][Col]);
+				Time[Row][Col] = Graph[Row][Col] / GetVehicleTime(TripVehicle[Row][Col]);
+			}
+			Graph[Row][Col] = Time[Row][Col] * Cost[Row][Col];
+		}
+	}
 }
 
 int GetNextCity(std::array<float, CityCount> Distance, std::vector<City*> AllCities, std::vector<MissionCity*> MissionCities)
 {
-	float MinPriority = SoMuchKilometers;
-	float MinDistance = SoMuchKilometers;
+	float MinPriority = SoBigNumber;
+	float MinDistance = 1.0f;
 	int MinIndex = -1;
 	for (auto CurrentCity : MissionCities)
 	{
-		if (!CurrentCity->GetIsVisited() && CurrentCity->GetPriority() / Distance[CurrentCity->GetIndex()] < MinPriority / MinDistance)
+		if (!CurrentCity->GetIsVisited() && CurrentCity->GetPriority() * Distance[CurrentCity->GetIndex()] < MinPriority * MinDistance)
 		{
 			MinPriority = CurrentCity->GetPriority();
 			MinDistance = Distance[CurrentCity->GetIndex()];
@@ -438,7 +513,7 @@ void DoMission(MissionCity& DoneCity)
 	}
 	else
 	{
-		CurrentProfit += (DoneCity.GetProfit() * ((TimeSpent - DoneCity.GetDeadline() * 0.4f)));
+		CurrentProfit += (DoneCity.GetProfit() * (((TimeSpent - DoneCity.GetDeadline()) * 0.4f)));
 	}
 	TimeSpent += DoneCity.GetDuration();
 	DoneCity.SetIsVisited(true);
@@ -454,6 +529,91 @@ MissionCity* GetMissionCityByIndex(int Index, std::vector<MissionCity*> MissionC
 		}
 	}
 	return nullptr;
+}
+
+void SetPathBestDecision(std::array<std::array<float, CityCount>, CityCount> Graph, std::array<std::array<MeanOfTravel, CityCount>, CityCount>& TripVehicle, std::vector<City*> AllCities)
+{
+	float MinMultiplier;
+	for (int Row = 0; Row < CityCount; Row++)
+	{
+		for (int Col = 0; Col < CityCount; Col++)
+		{
+			if (AllCities[Row]->HasInNearbyCities(*AllCities[Col]) != -1)
+			{
+				MinMultiplier = SoBigNumber;
+				if (AllCities[Row]->bHasRoad && AllCities[Col]->bHasRoad)
+				{
+					MinMultiplier = (Graph[Row][Col] / CarTime) * (Graph[Row][Col] * CarCost / 1'000'000.0f);
+					TripVehicle[Row][Col] = MeanOfTravel::Car;
+				}
+				if (AllCities[Row]->bHasRailOrWharf && AllCities[Col]->bHasRailOrWharf)
+				{
+					if ((Graph[Row][Col] / RailOrWharfTime) * (Graph[Row][Col] * RailOrWharfCost / 1'000'000.0f) < MinMultiplier)
+					{
+						MinMultiplier = (Graph[Row][Col] / RailOrWharfTime) * (Graph[Row][Col] * RailOrWharfCost / 1'000'000.0f);
+						TripVehicle[Row][Col] = MeanOfTravel::TrainOrShip;
+					}
+				}
+				if (AllCities[Row]->bHasAirport && AllCities[Col]->bHasAirport)
+				{
+					if (0.5f * AirCost / 1'000'000.0f < MinMultiplier)
+					{
+						MinMultiplier = 0.5f * AirCost / 1'000'000.0f;
+						TripVehicle[Row][Col] = MeanOfTravel::Airplane;
+					}
+				}
+				if (MinMultiplier == SoBigNumber)
+				{
+					TripVehicle[Row][Col] = MeanOfTravel::None;
+				}
+			}
+			else
+			{
+				TripVehicle[Row][Col] = MeanOfTravel::None;
+			}
+		}
+
+	}
+}
+
+float GetVehicleTime(MeanOfTravel Vehicle)
+{
+	if (Vehicle == MeanOfTravel::Car)
+	{
+		return CarTime;
+	}
+	else if (Vehicle == MeanOfTravel::TrainOrShip)
+	{
+		return RailOrWharfTime;
+	}
+	else if (Vehicle == MeanOfTravel::Airplane)
+	{
+		return 0.5f;
+	}
+	else
+	{
+		return 0.000000001f;
+	}
+}
+
+float GetVehicleCost(MeanOfTravel Vehicle)
+{
+	if (Vehicle == MeanOfTravel::Car)
+	{
+		return CarCost / 1'000'000.0f;
+	}
+	else if (Vehicle == MeanOfTravel::TrainOrShip)
+	{
+		return RailOrWharfCost / 1'000'000.0f;
+	}
+	else if (Vehicle == MeanOfTravel::Airplane)
+	{
+		return AirCost / 1'000'000.0f;
+	}
+	else
+	{
+		return 1'000'000'000.0f;
+	}
 }
 
 #pragma endregion Implementations
