@@ -513,7 +513,7 @@ void DoMission(MissionCity& DoneCity)
 	}
 	else
 	{
-		CurrentProfit += (DoneCity.GetProfit() * (((TimeSpent - DoneCity.GetDeadline()) * 0.4f)));
+		CurrentProfit += (DoneCity.GetProfit() - (((TimeSpent - DoneCity.GetDeadline()) * 0.4f)));
 	}
 	TimeSpent += DoneCity.GetDuration();
 	DoneCity.SetIsVisited(true);
