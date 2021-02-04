@@ -507,13 +507,12 @@ int GetNextCity(std::array<float, CityCount> Distance, std::vector<City*> AllCit
 
 void DoMission(MissionCity& DoneCity)
 {
-	if (TimeSpent <= DoneCity.GetDeadline())
+	CurrentProfit += DoneCity.GetProfit();
+	float Profit = DoneCity.GetProfit();
+	for (int Iterator = 0; Iterator < TimeSpent - DoneCity.GetDeadline(); Iterator++)
 	{
-		CurrentProfit += DoneCity.GetProfit();
-	}
-	else
-	{
-		CurrentProfit += (DoneCity.GetProfit() - (((TimeSpent - DoneCity.GetDeadline()) * 0.4f)));
+		CurrentProfit -= Profit * 0.4f;
+		Profit *= 0.4f;
 	}
 	TimeSpent += DoneCity.GetDuration();
 	DoneCity.SetIsVisited(true);
